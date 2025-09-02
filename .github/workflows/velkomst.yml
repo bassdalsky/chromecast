@@ -6,21 +6,29 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Sjekk ut kode
+        uses: actions/checkout@v3
+
+      - name: Sett opp Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: 20
-      - run: npm install node-fetch@3
-      - run: node velkomst.js
+          node-version: 18
+
+      - name: Installer avhengigheter
+        run: npm install node-fetch@2
+
+      - name: Kjør velkomst
+        run: node velkomst.js
         env:
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-          SKILBREI_LAT: ${{ secrets.SKILBREI_LAT }}
-          SKILBREI_LON: ${{ secrets.SKILBREI_LON }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-      - uses: actions/upload-artifact@v4
+          SKILBREI_LAT: ${{ secrets.SKILBREI_LAT }}
+          SKILBREI_LON: ${{ secrets.SKILBREI_LON }}
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+
+      - name: Last opp artifact (mp3)
+        uses: actions/upload-artifact@v3
         with:
           name: velkomst-mp3
           path: velkomst.mp3
