@@ -1,34 +1,31 @@
-import fetch from "node-fetch";
 import fs from "fs";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
 
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-const ELEVENLABS_VOICE_ID = process.env.ELEVENLABS_VOICE_ID; // Må ligge i Secrets
-const LAT = process.env.SKILBREI_LAT;
-const LON = process.env.SKILBREI_LON;
-const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
+dotenv.config();
+
+const WEATHER_URL = `https://api.openweathermap.org/data/2.5/weather?lat=${process.env.SKILBREI_LAT}&lon=${process.env.SKILBREI_LON}&appid=${process.env.OPENWEATHER_KEY}&units=metric&lang=no`;
 
 async function getWeather() {
-  const url = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=no`;
-  console.log("[DEBUG] Henter værdata fra:", url);
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Feil frå OpenWeather (${res.status}): ${await res.text()}`);
-  }
-  return res.json();
+  const res = await fetch(WEATHER_URL);
+  if (!res.ok) throw new Error("Feil ved henting av værdata");
+  const data = await res.json();
+  return {
+    temp: Math.round(data.main.temp),
+    desc: data.weather[0].description,
+  };
 }
 
 async function makeMp3(text) {
-  console.log("[DEBUG] Sender tekst til ElevenLabs:", text);
   const res = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,
+    `https://api.elevenlabs.io/v1/text-to-speech/${process.env.ELEVENLABS_VOICE_ID}`,
     {
       method: "POST",
       headers: {
+        "xi-api-key": process.env.ELEVENLABS_API_KEY,
         "Content-Type": "application/json",
-        "xi-api-key": ELEVENLABS_API_KEY,
       },
       body: JSON.stringify({
-        model_id: "eleven_multilingual_v3_alpha",
         text,
         voice_settings: {
           stability: 0.4,
@@ -39,21 +36,19 @@ async function makeMp3(text) {
   );
 
   if (!res.ok) {
-    throw new Error(`Feil frå ElevenLabs (${res.status}): ${await res.text()}`);
+    const errText = await res.text();
+    throw new Error(`Feil frå ElevenLabs (${res.status}): ${errText}`);
   }
 
-  const arrayBuffer = await res.arrayBuffer();
-  fs.writeFileSync("velkomst.mp3", Buffer.from(arrayBuffer));
-  console.log("✅ Lagde velkomst.mp3");
+  const buffer = Buffer.from(await res.arrayBuffer());
+  fs.writeFileSync("velkomst.mp3", buffer);
+  console.log("✅ Lydfil lagra: velkomst.mp3");
 }
 
 async function main() {
-  const weather = await getWeather();
-  const temp = Math.round(weather.main.temp);
-  const description = weather.weather[0].description;
-
-  const tekst = `Velkommen hjem til Skilbrei. Temperaturen er ${temp} grader og været er ${description}.`;
-
+  const { temp, desc } = await getWeather();
+  const tekst = `Velkommen hjem til Skilbrei. Temperaturen er ${temp} grader og været er ${desc}.`;
+  console.log("[DEBUG] Sender tekst til ElevenLabs:", tekst);
   await makeMp3(tekst);
 }
 
