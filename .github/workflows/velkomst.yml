@@ -1,7 +1,7 @@
 name: Velkomst
 
 on:
-  workflow_dispatch: # Manuell kjøring frå GitHub Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -27,31 +27,4 @@ jobs:
           SKILBREI_LON: ${{ secrets.SKILBREI_LON }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-          ELEVENLABS_MODEL_ID: ${{ secrets.ELEVENLABS_MODEL_ID }}
-
-      - name: Opprett Pages-artifakter
-        run: |
-          mkdir -p public
-          mv velkomst.mp3 public/
-          echo "✅ velkomst.mp3 klar i public/"
-
-      - name: Last opp Pages-artifakter
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./public
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy til GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          ELEVENLABS_MODEL_ID: "eleven_multilingual_v3"
