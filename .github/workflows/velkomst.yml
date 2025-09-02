@@ -2,6 +2,8 @@ name: velkomst
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *" # kvar time
 
 jobs:
   build:
@@ -10,24 +12,24 @@ jobs:
       - name: Sjekk ut kode
         uses: actions/checkout@v4
 
-      - name: Sett opp Node.js
+      - name: Sett opp Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: "20"
 
       - name: Installer avhengigheter
-        run: npm install node-fetch@2
+        run: npm install
 
       - name: Kjør velkomst
         run: node velkomst.js
         env:
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          OPENWEATHER_KEY: ${{ secrets.OPENWEATHER_KEY }}
           SKILBREI_LAT: ${{ secrets.SKILBREI_LAT }}
           SKILBREI_LON: ${{ secrets.SKILBREI_LON }}
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
 
-      - name: Last opp artifact (mp3)
+      - name: Last opp MP3 som artifact
         uses: actions/upload-artifact@v4
         with:
           name: velkomst-mp3
