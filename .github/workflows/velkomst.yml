@@ -8,10 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Sjekk ut kode
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Sett opp Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
 
@@ -28,7 +28,7 @@ jobs:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
 
       - name: Last opp artifact (mp3)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: velkomst-mp3
           path: velkomst.mp3
