@@ -1,29 +1,30 @@
-name: Bygg velkomst.mp3
+name: Velkomst
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  velkomst:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Sett opp Node.js
+      - name: Hent kode
+        uses: actions/checkout@v3
+
+      - name: Sett opp Node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-      - run: npm install
-      - name: Lag velkomst.mp3
+          node-version: 20
+
+      - name: Installer avhengigheiter
+        run: npm install
+
+      - name: Køyr velkomst.js
         run: node velkomst.js
         env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
           SKILBREI_LAT: ${{ secrets.SKILBREI_LAT }}
           SKILBREI_LON: ${{ secrets.SKILBREI_LON }}
-      - name: Deploy til GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          publish_branch: gh-pages
