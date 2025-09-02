@@ -1,59 +1,57 @@
-name: velkomst
+name: Velkomst
 
 on:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  workflow_dispatch: # Manuell kjøring frå GitHub Actions
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Sjekk ut kode
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Sett opp Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install deps
+      - name: Installer avhengigheter
         run: npm install node-fetch@3
 
-      - name: Generate MP3
+      - name: Kjør velkomst.js
         run: node velkomst.js
         env:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-          ELEVENLABS_API_KEY:  ${{ secrets.ELEVENLABS_API_KEY }}
+          SKILBREI_LAT: ${{ secrets.SKILBREI_LAT }}
+          SKILBREI_LON: ${{ secrets.SKILBREI_LON }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-          ELEVENLABS_MODEL_ID: ${{ secrets.ELEVENLABS_MODEL_ID }} # valfri, default eleven_v3
-          SKILBREI_LAT:       ${{ secrets.SKILBREI_LAT }}
-          SKILBREI_LON:       ${{ secrets.SKILBREI_LON }}
+          ELEVENLABS_MODEL_ID: ${{ secrets.ELEVENLABS_MODEL_ID }}
 
-      - name: Prepare Pages artifact
+      - name: Opprett Pages-artifakter
         run: |
           mkdir -p public
-          mv velkomst.mp3 public/velkomst.mp3
-          echo "<!doctype html><meta charset='utf-8'><title>velkomst</title><p><a href='velkomst.mp3'>Spel av velkomst.mp3</a></p>" > public/index.html
+          mv velkomst.mp3 public/
+          echo "✅ velkomst.mp3 klar i public/"
 
-      - name: Upload artifact
+      - name: Last opp Pages-artifakter
         uses: actions/upload-pages-artifact@v3
         with:
-          path: public
+          path: ./public
 
   deploy:
     needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+
     environment:
       name: github-pages
-    runs-on: ubuntu-latest
+      url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
-      - name: Deploy to Pages
+      - name: Deploy til GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
