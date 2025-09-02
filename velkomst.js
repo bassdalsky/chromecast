@@ -1,10 +1,12 @@
 import fs from "fs";
 import fetch from "node-fetch";
-import "dotenv/config";
+import dotenv from "dotenv";
 
+dotenv.config();
+
+const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const VOICE_ID = process.env.ELEVENLABS_VOICE_ID || "s2xtA7B2CTXPPlJzch1v";
-const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
 const LAT = process.env.SKILBREI_LAT;
 const LON = process.env.SKILBREI_LON;
 
@@ -13,12 +15,10 @@ async function getWeather() {
   console.log("[DEBUG] Hentar vêrdata frå:", url);
 
   const res = await fetch(url);
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Feil frå OpenWeather (${res.status}): ${txt}`);
-  }
+  const text = await res.text();
+  if (!res.ok) throw new Error(`Feil frå OpenWeather (${res.status}): ${text}`);
 
-  const data = await res.json();
+  const data = JSON.parse(text);
   return `Temperaturen er ${Math.round(data.main.temp)} grader og været er ${data.weather[0].description}.`;
 }
 
@@ -29,30 +29,34 @@ async function makeMp3(text) {
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      "xi-api-key": ELEVENLABS_API_KEY,
       "Content-Type": "application/json",
+      "xi-api-key": ELEVENLABS_API_KEY,
     },
     body: JSON.stringify({
       text,
-      voice_settings: { stability: 0.7, similarity_boost: 0.7 },
+      model_id: "eleven_multilingual_v2",
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75,
+      },
     }),
   });
 
   if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`Feil frå ElevenLabs (${res.status}): ${txt}`);
+    const errorText = await res.text();
+    throw new Error(`Feil frå ElevenLabs (${res.status}): ${errorText}`);
   }
 
   const arrayBuffer = await res.arrayBuffer();
   fs.writeFileSync("velkomst.mp3", Buffer.from(arrayBuffer));
-  console.log("✅ Lagde fil: velkomst.mp3");
+  console.log("✅ Lyd lagra som velkomst.mp3");
 }
 
 async function main() {
   try {
-    const weather = await getWeather();
-    const melding = `Velkommen heim til Skilbrei. ${weather}`;
-    await makeMp3(melding);
+    const weatherText = await getWeather();
+    const fullText = `Velkommen heim til Skilbrei. ${weatherText}`;
+    await makeMp3(fullText);
   } catch (err) {
     console.error("❌ Feil:", err);
     process.exit(1);
